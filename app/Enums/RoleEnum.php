@@ -5,16 +5,16 @@ namespace App\Enums;
 enum RoleEnum: string
 {
     case SuperAdmin = 'super-admin';
-    case Manager = 'manager';
-    case Tenant = 'tenant';
+    case Admin = 'admin';
+    case Employee = 'employee';
     case User = 'user';
 
     public function label(): string
     {
         return match ($this) {
-            static::SuperAdmin => 'Super admins',
-            static::Manager => 'Managers',
-            static::Tenant => 'Tenants',
+            static::SuperAdmin => 'Super Admins',
+            static::Admin => 'Admins',
+            static::Employee => 'Employees',
             static::User => 'Users',
         };
     }
