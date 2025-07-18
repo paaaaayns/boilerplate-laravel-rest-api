@@ -25,6 +25,7 @@ return new class extends Migration
             $table->ulid('ulid')->primary()->unique(); // permission id
             $table->string('name');       // For MyISAM use string('name', 225); // (or 166 for InnoDB with Redundant/Compact row format)
             $table->string('guard_name'); // For MyISAM use string('guard_name', 25);
+            $table->string('category');
             $table->timestamps();
 
             $table->unique(['name', 'guard_name']);

@@ -12,6 +12,4 @@ enum UserPermissionEnum: string
     case SoftDelete = 'soft delete user';
     case HardDelete = 'hard delete user';
     case Restore = 'restore user';
-    case Import = 'import user';
-    case Export = 'export user';
 }
