@@ -88,5 +88,5 @@ return [
     |
     */
 
-    'prefix' => 'api',
+    'prefix' => 'api/v1',
 ];
