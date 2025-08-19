@@ -17,7 +17,7 @@ class ProfileResource extends JsonResource
 
         $isOwner = $authenticatedUser && $this->user_id === $authenticatedUser->id;
 
-        $hasPermissionToViewProtectedData = $authenticatedUser->has_any_permission([
+        $hasPermissionToViewProtectedData = $authenticatedUser->hasAnyPermission([
             UserPermissionEnum::ViewProtectedData->value,
             UserPermissionEnum::ViewOwn->value,
         ]);

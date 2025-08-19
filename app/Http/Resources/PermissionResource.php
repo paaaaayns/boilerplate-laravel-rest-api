@@ -13,7 +13,7 @@ class PermissionResource extends JsonResource
     {
         $authenticatedUser = User::find($request->user()->id);
 
-        $canViewProtectedData = $authenticatedUser->has_any_permission([
+        $canViewProtectedData = $authenticatedUser->hasAnyPermission([
             PermissionPermissionEnum::ViewProtectedData->value,
             PermissionPermissionEnum::ViewOwn->value,
         ]);
