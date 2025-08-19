@@ -15,7 +15,7 @@ class UserResource extends JsonResource
 
         $isOwner = $authenticatedUser && $this->id === $authenticatedUser->id;
 
-        $hasPermissionToViewProtectedData = $authenticatedUser->has_any_permission([
+        $hasPermissionToViewProtectedData = $authenticatedUser->hasAnyPermission([
             UserPermissionEnum::ViewProtectedData->value,
             UserPermissionEnum::ViewOwn->value,
         ]);
