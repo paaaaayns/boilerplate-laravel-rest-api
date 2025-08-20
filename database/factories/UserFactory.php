@@ -30,7 +30,7 @@ class UserFactory extends Factory
         return [
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => 'Password123!!',
+            'password' => 'Test@123',
             'remember_token' => Str::random(10),
             'created_at' => $randomCreatedAt,
             'updated_at' => $randomUpdatedAt->greaterThan($randomCreatedAt) ? $randomUpdatedAt : $randomCreatedAt,
