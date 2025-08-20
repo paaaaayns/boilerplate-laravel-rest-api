@@ -67,17 +67,24 @@ class User extends Authenticatable
         );
     }
 
-    protected function deletedAt(): Attribute
-    {
-        return Attribute::make(
-            get: fn($value) => $value ? Carbon::parse($value)->format('M j, Y, g:i a') : null
-        );
-    }
-
     protected function updatedAt(): Attribute
     {
         return Attribute::make(
             get: fn($value) => $value ? Carbon::parse($value)->diffForHumans() : null
+        );
+    }
+
+    protected function passwordChangedAt(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => $value ? Carbon::parse($value)->diffForHumans() : null
+        );
+    }
+
+    protected function deletedAt(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => $value ? Carbon::parse($value)->format('M j, Y, g:i a') : null
         );
     }
 }
