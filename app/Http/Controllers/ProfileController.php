@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Http\Requests\Profile\UpdateProfileRequest;
+use App\Http\Resources\UserResource;
 use App\Policies\UserPolicy;
 use Illuminate\Support\Facades\Auth;
 
@@ -34,6 +35,7 @@ class ProfileController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Profile updated successfully',
+            'data' => new UserResource($user)
         ], 200);
     }
 }
