@@ -24,26 +24,26 @@ class DatabaseSeeder extends Seeder
         $superAdmin = User::factory()
             ->create([
                 'email' => 'super.admin@test.com',
-                'password' => Hash::make('Password123!!'),
+                'password' => Hash::make('Test@123'),
             ])->assignRole(RoleEnum::SuperAdmin->value);
 
         $admin = User::factory()
             ->create([
                 'email' => 'admin@test.com',
-                'password' => Hash::make('Password123!!'),
+                'password' => Hash::make('Test@123'),
             ])->assignRole(RoleEnum::Admin->value);
 
 
         $employee = User::factory()
             ->create([
                 'email' => 'employee@test.com',
-                'password' => Hash::make('Password123!!'),
+                'password' => Hash::make('Test@123'),
             ])->assignRole(RoleEnum::Employee->value);
 
         $user = User::factory()
             ->create([
                 'email' => 'user@test.com',
-                'password' => Hash::make('Password123!!'),
+                'password' => Hash::make('Test@123'),
             ])->assignRole(RoleEnum::User->value);
 
         $superAdmin->profile()->save(
