@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Http\Requests\Profile\UpdateProfileRequest;
-use App\Http\Resources\UserResource;
 use App\Policies\UserPolicy;
+use App\Services\ProfileService;
 use Illuminate\Support\Facades\Auth;
 
 class ProfileController extends Controller
@@ -16,26 +16,17 @@ class ProfileController extends Controller
 
     public function update(
         UpdateProfileRequest $request,
+        ProfileService $profileService,
         User $user
     ) {
-        $requester = Auth::user();
+        $authenticatedUser = User::findOrFail(Auth::id());
 
-        if (! $this->userPolicy->update($requester, $user)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized to change this user\'s profile.'
-            ]);
-        }
+        $validatedData = $request->validated();
 
-        $validated = $request->validated();
-
-        $user->profile->update($validated);
-        $user->profile->save();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Profile updated successfully',
-            'data' => new UserResource($user)
-        ], 200);
+        return $profileService->update(
+            $user,
+            $validatedData,
+            $authenticatedUser
+        );
     }
 }
