@@ -5,12 +5,14 @@ namespace Database\Factories;
 use App\Enums\GenderEnum;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 class ProfileFactory extends Factory
 {
     public function definition(): array
     {
         return [
+            'employee_id' => Str::random(10),
             'first_name' => fake()->firstName(),
             'middle_name' => fake()->lastName(),
             'last_name' => fake()->lastName(),

@@ -47,6 +47,8 @@ class RolesAndPermissionsSeeder extends Seeder
                 UserPermissionEnum::SoftDelete->value,
                 UserPermissionEnum::HardDelete->value,
                 UserPermissionEnum::Restore->value,
+                UserPermissionEnum::Import->value,
+                UserPermissionEnum::Export->value,
 
                 RolePermissionEnum::ViewAny->value,
                 RolePermissionEnum::ViewOwn->value,
