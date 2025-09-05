@@ -27,12 +27,9 @@ class Profile extends Model
         return $this->hasOne(User::class);
     }
 
-    protected function hourlyRate(): Attribute
+    protected function fullName(): Attribute
     {
-        return Attribute::make(
-            get: fn($value) => ($value / 100),
-            set: fn($value) => (int) ($value * 100),
-        );
+        return Attribute::make(get: fn(mixed $value, array $attributes) => "{$attributes['first_name']} {$attributes['last_name']}");
     }
 
     protected function createdAt(): Attribute
