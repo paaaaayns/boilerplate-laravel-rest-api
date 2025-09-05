@@ -58,16 +58,19 @@ class AuthController extends Controller
             ], 200);
         }
 
-        $userData = new UserResource($user->load([
-            'profile',
-            'permissions',
-            'roles',
-        ]));
+        $roles = $user->roles->pluck('name');
+        $permissions = $user->getAllPermissions()->pluck('name');
 
         return response()->json([
             'success' => true,
             'message' => 'Authenticated successfully.',
-            'data' => $userData,
+            'data' => [
+                'id' => $user->id,
+                'email' => $user->email,
+                'name' => $user->profile->full_name,
+                'permissions' => $permissions,
+                'roles' => $roles,
+            ]
         ], 200);
     }
 }
