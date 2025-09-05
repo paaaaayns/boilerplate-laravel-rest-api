@@ -12,6 +12,7 @@ use App\Filters\FullnameFilter;
 use App\Filters\PermissionFilter;
 use App\Http\Resources\UserResource;
 use App\Imports\UsersImport;
+use App\Jobs\User\NotifyUserUserExportStatus;
 use App\Policies\UserPolicy;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedSort;
@@ -72,11 +73,6 @@ class UserService
             ])
             ->select('users.*')
             ->leftJoin('profiles', 'profiles.user_id', '=', 'users.id');
-
-        Log::debug('UserService listQuery executed', [
-            'query' => $query->toSql(),
-            'bindings' => $query->getBindings(),
-        ]);
 
         return $query;
     }
@@ -261,7 +257,13 @@ class UserService
         $userExport = new UsersExport($requester->id);
 
         return $userExport
-            ->queue($filepath, 'private');
+            ->queue($filepath, 'private')
+            ->chain([
+                new NotifyUserUserExportStatus(
+                    $requester->id,
+                    $filename
+                ),
+            ]);
     }
 
     public function downloadExportFile(string $filename)

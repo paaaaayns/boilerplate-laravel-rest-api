@@ -69,9 +69,9 @@ class UsersExport implements
 
         $exporter = User::find($this->requesterId);
 
-        // $exporter?->notify(new ExportUserStatusNotification([
-        //     'success' => false,
-        //     'message' => 'Excel export failed.' . $exception->getMessage()
-        // ]));
+        $exporter?->notify(new ExportUserStatusNotification([
+            'success' => false,
+            'message' => 'Excel export failed.' . $exception->getMessage()
+        ]));
     }
 }
