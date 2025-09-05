@@ -153,7 +153,7 @@ class UserController extends Controller implements HasMiddleware
 
         return response()->json([
             'success' => true,
-            'message' => 'Users imported successfully'
+            'message' => 'Import started. You will be notified when the file is finished processing.'
         ], 200);
     }
 
@@ -165,7 +165,7 @@ class UserController extends Controller implements HasMiddleware
 
         return response()->json([
             'success' => true,
-            'message' => 'Export started. You will be notified when the file is ready to download or an error occurred.'
+            'message' => 'Export started. You will be notified when the file is ready to download.'
         ], 200);
     }
 

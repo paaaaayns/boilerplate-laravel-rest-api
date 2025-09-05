@@ -9,7 +9,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
 
-class NotifyUserUserExportStatus implements ShouldQueue
+class NotifyUserExportStatus implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

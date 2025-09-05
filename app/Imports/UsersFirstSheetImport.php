@@ -6,59 +6,98 @@ use App\Models\Profile;
 use App\Models\User;
 use App\Enums\GenderEnum;
 use App\Enums\RoleEnum;
+use App\Notifications\User\ImportUsersStatusNotification;
 use App\Rules\LettersAndSpaceOnly;
+use App\Services\UserService;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Concerns\Importable;
+use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
-use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithStartRow;
+use Maatwebsite\Excel\Events\AfterImport;
+use Maatwebsite\Excel\Events\ImportFailed;
+use Maatwebsite\Excel\Row;
 
 class UsersFirstSheetImport implements
-    ToCollection,
+    OnEachRow,
     WithHeadingRow,
     WithValidation,
-    SkipsEmptyRows
+    WithChunkReading,
+    SkipsEmptyRows,
+    WithStartRow,
+    WithEvents,
+    ShouldQueue
 {
     use Importable;
 
-    public function collection(Collection $rows)
+    public function __construct(
+        private User $requester,
+        private UserService $userService
+    ) {}
+
+    public function onRow(Row $row): void
     {
-        foreach ($rows as $row) {
-            $existingUser = User::withTrashed()->where('email', $row['email'])->first();
+        $rowIndex = $row->getIndex();
+        request()->merge(['_row' => $rowIndex]);
+
+        $data = $row->toArray();
+
+        Log::info("Processing row {$rowIndex}", [
+            'email' => $data['email'],
+        ]);
+
+        try {
+            $existingUser = User::withTrashed()->where('email', $data['email'])->first();
 
             if ($existingUser && $existingUser->trashed()) {
-                throw new ModelNotFoundException("Cannot insert record, user with email {$row['email']} is soft-deleted.");
+                throw new ModelNotFoundException(
+                    "Cannot insert record, user with email {$data['email']} is soft-deleted."
+                );
             }
 
-            User::updateOrCreate(
-                ['email' => $row['email']],
+            $user = User::updateOrCreate(
+                ['email' => $data['email']],
                 [
-                    'email' => $row['email'],
-                    'updated_at' => now()
-                ],
+                    'email'      => $data['email'],
+                    'updated_at' => now(),
+                ]
             );
-
-            $user = User::where(
-                'email',
-                $row['email']
-            )->firstOrFail();
 
             Profile::updateOrCreate(
                 ['user_id' => $user->id],
                 [
-                    'user_id' => $user->id,
-                    'first_name' => $row['first_name'],
-                    'middle_name' => $row['middle_name'] ?? null,
-                    'last_name' => $row['last_name'],
-                    'gender' => $row['gender'] ?? null,
-                    'contact_number' => $row['contact_number'] ?? null,
+                    'user_id'        => $user->id,
+                    'first_name'     => $data['first_name'],
+                    'middle_name'    => $data['middle_name'] ?? null,
+                    'last_name'      => $data['last_name'],
+                    'gender'         => $data['gender'] ?? null,
+                    'contact_number' => $data['contact_number'] ?? null,
                 ]
             );
+
             $user->syncRoles([RoleEnum::User->value]);
+        } catch (\Exception $e) {
+            Log::error("Error processing row {$rowIndex}: " . $e->getMessage(), [
+                'exception' => $e,
+            ]);
         }
+    }
+
+    public function chunkSize(): int
+    {
+        return 500;
+    }
+
+    public function startRow(): int
+    {
+        return 3;
     }
 
     public function rules(): array
@@ -106,6 +145,32 @@ class UsersFirstSheetImport implements
                     )
                 ),
             ],
+        ];
+    }
+
+    public function registerEvents(): array
+    {
+        $importer = $this->requester;
+
+        return [
+            AfterImport::class => function (AfterImport $event) use ($importer) {
+
+                $importer?->notify(new ImportUsersStatusNotification([
+                    'success' => true,
+                    'message' => 'Users import has been completed.',
+                ]));
+
+                // broadcast(new UsersModified());
+            },
+            ImportFailed::class => function ($event) use ($importer) {
+
+                $importer?->notify(new ImportUsersStatusNotification([
+                    'success' => false,
+                    'message' => 'Users import has failed.' . $event->getException()->getMessage()
+                ]));
+
+                Log::error('Excel import failed', ['exception' => $event->getException()]);
+            },
         ];
     }
 }

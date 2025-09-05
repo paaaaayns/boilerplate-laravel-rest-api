@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-class ExportUsersStatusNotification extends Notification implements ShouldQueue
+class ImportUsersStatusNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -24,7 +24,7 @@ class ExportUsersStatusNotification extends Notification implements ShouldQueue
     {
         return array_merge($this->data, [
             'category' => 'user',
-            'type' => 'export',
+            'type' => 'import',
         ]);
     }
 

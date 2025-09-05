@@ -11,8 +11,9 @@ use App\Filters\DateRangeFilter;
 use App\Filters\FullnameFilter;
 use App\Filters\PermissionFilter;
 use App\Http\Resources\UserResource;
+use App\Imports\UsersFirstSheetImport;
 use App\Imports\UsersImport;
-use App\Jobs\User\NotifyUserUserExportStatus;
+use App\Jobs\User\NotifyUserExportStatus;
 use App\Policies\UserPolicy;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedSort;
@@ -245,7 +246,11 @@ class UserService
 
     public function import($file, User $requester)
     {
-        return (new UsersImport)->import($file);
+        $userService = app(UserService::class);
+
+        // return (new UsersImport)->import($file);
+        return (new UsersFirstSheetImport($requester, $userService))->queue($file);
+        // return (new SchedulesImport($authenticatedUserId, $userService))->queue($file);
     }
 
     public function export(User $requester)
@@ -259,7 +264,7 @@ class UserService
         return $userExport
             ->queue($filepath, 'private')
             ->chain([
-                new NotifyUserUserExportStatus(
+                new NotifyUserExportStatus(
                     $requester->id,
                     $filename
                 ),
