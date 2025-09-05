@@ -3,7 +3,7 @@
 namespace App\Jobs\User;
 
 use App\Models\User;
-use App\Notifications\User\ExportUserStatusNotification;
+use App\Notifications\User\ExportUsersStatusNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\SerializesModels;
@@ -24,7 +24,7 @@ class NotifyUserUserExportStatus implements ShouldQueue
         $filepath = "exports/users/{$this->filename}";
 
         if (! Storage::disk('private')->exists($filepath)) {
-            $exporter?->notify(new ExportUserStatusNotification([
+            $exporter?->notify(new ExportUsersStatusNotification([
                 'success' => false,
                 'message' => 'User export has failed.',
             ]));
@@ -32,7 +32,7 @@ class NotifyUserUserExportStatus implements ShouldQueue
             $apiURL = config('app.api_url');
             $downloadURL = "{$apiURL}/users/export/download/{$this->filename}";
 
-            $exporter?->notify(new ExportUserStatusNotification([
+            $exporter?->notify(new ExportUsersStatusNotification([
                 'success' => true,
                 'message' => 'User export file is ready to download.',
                 'data' => [

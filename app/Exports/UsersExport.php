@@ -5,7 +5,7 @@ namespace App\Exports;
 use Throwable;
 use App\Models\User;
 use App\Services\UserService;
-use App\Notifications\User\ExportUserStatusNotification;
+use App\Notifications\User\ExportUsersStatusNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -69,7 +69,7 @@ class UsersExport implements
 
         $exporter = User::find($this->requesterId);
 
-        $exporter?->notify(new ExportUserStatusNotification([
+        $exporter?->notify(new ExportUsersStatusNotification([
             'success' => false,
             'message' => 'Excel export failed.' . $exception->getMessage()
         ]));

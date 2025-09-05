@@ -8,7 +8,7 @@ use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ExportUserStatusNotification extends Notification
+class ExportUsersStatusNotification extends Notification
 {
     use Queueable;
 
