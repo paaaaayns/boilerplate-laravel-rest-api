@@ -3,15 +3,16 @@
 namespace App\Services;
 
 use App\Enums\RoleEnum;
-use App\Models\User;
-use App\Imports\UsersImport;
-use App\Exports\UsersExport;
 use App\Exports\UserImportTemplate;
+use App\Exports\UsersExport;
+use App\Models\User;
 use App\Filters\RoleFilter;
 use App\Filters\DateRangeFilter;
 use App\Filters\FullnameFilter;
 use App\Filters\PermissionFilter;
 use App\Http\Resources\UserResource;
+use App\Imports\UsersImport;
+use App\Policies\UserPolicy;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedSort;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -19,15 +20,25 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Spatie\QueryBuilder\QueryBuilderRequest;
 
 class UserService
 {
     const DEFAULT_PAGE = 1;
     const DEFAULT_PER_PAGE = 10;
 
-    public function listQuery()
+    public function __construct(
+        protected UserPolicy $userPolicy,
+    ) {}
+
+    public function listQuery($customQuery = null)
     {
-        $query = QueryBuilder::for(User::class)
+        if ($customQuery) {
+            $customRequest = app(QueryBuilderRequest::class)->merge($customQuery);
+        }
+
+        $query = QueryBuilder::for(User::class, $customRequest ?? request())
             ->allowedIncludes([
                 'profile',
                 'roles',
@@ -73,44 +84,58 @@ class UserService
     public function list(
         int $page = self::DEFAULT_PAGE,
         int $perPage = self::DEFAULT_PER_PAGE,
+        User $requester
     ) {
+        $customRequest = request()->query();
+
         $users = $this
-            ->listQuery()
+            ->listQuery($customRequest)
             ->paginate(
                 perPage: $perPage,
                 page: $page
             );
 
-        return UserResource::collection($users)
+        $users = UserResource::collection($users)
             ->response()
             ->getData(true);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Users fetched successfully.',
+            'data' => $users
+        ]);
     }
 
-    public function listExport(
-        int $page = self::DEFAULT_PAGE,
-        int $perPage = self::DEFAULT_PER_PAGE,
+    public function show(
+        User $user,
+        User $requester
     ) {
-        return $this
-            ->listQuery()
-            ->limit($perPage)
-            ->offset(($page - 1) * $perPage);
-    }
+        if (! $this->userPolicy->view($requester, $user)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to view this user.',
+            ], 403);
+        }
 
-    public function show(string $userId)
-    {
         $user = QueryBuilder::for(User::class)
             ->allowedIncludes([
                 'roles',
                 'permissions',
                 'profile',
             ])
-            ->findOrFail($userId);
+            ->findOrFail($user->id);
 
-        return new UserResource($user);
+        return response()->json([
+            'success' => true,
+            'message' => 'User fetched successfully.',
+            'data' => new UserResource($user)
+        ], 200);
     }
 
-    public function store(array $data, $requester)
-    {
+    public function store(
+        array $data,
+        User $requester
+    ) {
         $roles = $data['roles'] ?? [];
 
         if (
@@ -152,35 +177,111 @@ class UserService
             return $createdUser;
         });
 
-        return $user;
+        return response()->json([
+            'success' => true,
+            'message' => 'User created successfully.',
+            'data' => new UserResource($user)
+        ], 201);
     }
 
 
-    public function update(array $updateData, string $userId)
-    {
-        $user = User::findOrFail($userId);
+    public function update(
+        User $user,
+        array $data,
+        User $requester
+    ) {
+        if (! $this->userPolicy->update($requester, $user)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to update this user.',
+            ], 403);
+        }
 
-        return DB::transaction(function () use ($user, $updateData) {
-            if (isset($updateData['roles'])) {
-                $user->syncRoles($updateData['roles']);
+        DB::transaction(function () use ($user, $data) {
+            if (isset($data['roles'])) {
+                $user->syncRoles($data['roles']);
             }
 
-            return $user->updateOrFail($updateData);
+            if (isset($data['password'])) {
+                $data['password_changed_at'] = now();
+            }
+
+            $user->updateOrFail($data);
         });
+
+        $user->refresh();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User updated successfully.',
+            'data' => new UserResource($user)
+        ], 200);
     }
 
 
-    public function destroy(string $userId)
-    {
-        $user = User::findOrFail($userId);
+    public function destroy(
+        User $user,
+        User $requester
+    ) {
+        $user->deleteOrFail();
 
-        return $user->deleteOrFail();
+        return response()->json([
+            'success' => true,
+            'message' => 'User deleted successfully.',
+            'data' => new UserResource($user)
+        ], 200);
     }
 
-    public function restore(string $userId)
-    {
+    public function restore(
+        string $userId,
+        User $requester
+    ) {
         $user = User::onlyTrashed()->findOrFail($userId);
 
-        return $user->restore();
+        $user->restore();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User restored successfully.',
+            'data' => new UserResource($user)
+        ], 200);
+    }
+
+    public function import($file, User $requester)
+    {
+        return (new UsersImport)->import($file);
+    }
+
+    public function export(User $requester)
+    {
+        $timestamp = date('Ymd_His');
+        $filename = "users{$timestamp}.xlsx";
+        $filepath = "exports/users/{$filename}";
+
+        $userExport = new UsersExport($requester->id);
+
+        return $userExport
+            ->queue($filepath, 'private');
+    }
+
+    public function downloadExportFile(string $filename)
+    {
+        $filepath = "exports/users/{$filename}";
+
+        if (!Storage::disk('private')->exists($filepath)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File has already expired',
+            ], 404);
+        }
+
+        $filepath = Storage::disk('private')->path($filepath);
+
+        return response()->download($filepath);
+    }
+
+    public function downloadImportTemplate()
+    {
+        return (new UserImportTemplate)->download('user_import_template.xlsx');
     }
 }

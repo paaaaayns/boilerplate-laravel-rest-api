@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Policies\UserPolicy;
-use Illuminate\Support\Facades\Log;
 
 class ProfileService
 {
@@ -18,8 +17,6 @@ class ProfileService
         array $data,
         User $requester
     ) {
-        Log::info('ProfileService@update: ' . $user->id . '|' . $requester->id);
-        
         if (! $this->userPolicy->update($requester, $user)) {
             return response()->json([
                 'success' => false,
