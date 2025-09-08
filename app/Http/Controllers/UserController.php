@@ -24,10 +24,8 @@ class UserController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('auth:sanctum'),
-            new Middleware(PermissionMiddleware::using([
-                UserPermissionEnum::ViewOwn->value,
-                UserPermissionEnum::ViewAny->value
-            ]), only: ['index', 'show']),
+            new Middleware(PermissionMiddleware::using(UserPermissionEnum::ViewMany->value), only: ['index', 'infiniteList']),
+            new Middleware(PermissionMiddleware::using(UserPermissionEnum::ViewOptions->value), only: ['listOptions']),
             new Middleware(PermissionMiddleware::using(UserPermissionEnum::Create->value), only: ['store']),
             new Middleware(PermissionMiddleware::using(UserPermissionEnum::Update->value), only: ['update', 'updateRole', 'updatePassword']),
             new Middleware(PermissionMiddleware::using(UserPermissionEnum::SoftDelete->value), only: ['destroy']),
@@ -48,6 +46,40 @@ class UserController extends Controller implements HasMiddleware
             $validatedData['page'] ?? 1,
             $validatedData['per_page'] ?? 30,
             $authenticatedUser
+        );
+    }
+
+    public function infiniteList(
+        ListUsersRequest $request
+    ) {
+        $validated = $request->validated();
+
+        $users = $this->userService->infiniteList(
+            $validated['page'] ?? 1,
+            $validated['per_page'] ?? 30
+        );
+
+        return response()->json(
+            [
+                'success' => true,
+                'message' => 'Users fetched successfully',
+                'data' => $users
+            ],
+            200
+        );
+    }
+
+    public function listOptions()
+    {
+        $users = $this->userService->listOptions();
+
+        return response()->json(
+            [
+                'success' => true,
+                'message' => 'Users fetched successfully',
+                'data' => $users
+            ],
+            200
         );
     }
 
