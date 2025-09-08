@@ -8,6 +8,7 @@ enum UserPermissionEnum: string
     case ViewOne = 'view one user';
     case ViewAny = 'view any user';
     case ViewOwn = 'view own user';
+    case ViewOptions = 'view user options';
     case ViewProtectedData = 'view user protected data';
     case Create = 'create user';
     case Update = 'update user';
