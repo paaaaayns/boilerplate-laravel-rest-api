@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +15,18 @@ Route::get('users/import/template', [UserController::class, 'downloadImportTempl
 Route::get('users/export', [UserController::class, 'export'])->name('export');
 Route::get('users/export/download/{filename}', [UserController::class, 'downloadExportFile'])->name('download.export.file');
 Route::apiResource('users', UserController::class);
+
+Route::prefix('notifications')->group(function () {
+    Route::controller(NotificationController::class)->group(function () {
+        Route::get('/', 'list')->name('notifications.list');
+        Route::get('/overview', 'overview')->name('notifications.overview');
+        Route::post('/read-all', 'readAll')->name('notifications.read.all');
+        Route::delete('/', 'deleteAll')->name('notifications.delete.all');
+        Route::post('/{notificationId}', 'read')->name('notifications.read');
+        Route::delete('/{notificationId}', 'delete')->name('notifications.delete');
+    });
+});
+
 
 Route::prefix('auth/spa')->group(function () {
     Route::get('authenticate', [AuthController::class, 'authenticate']);
