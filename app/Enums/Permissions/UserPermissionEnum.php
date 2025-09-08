@@ -4,6 +4,8 @@ namespace App\Enums\Permissions;
 
 enum UserPermissionEnum: string
 {
+    case ViewMany = 'view many user';
+    case ViewOne = 'view one user';
     case ViewAny = 'view any user';
     case ViewOwn = 'view own user';
     case ViewProtectedData = 'view user protected data';
