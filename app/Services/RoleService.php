@@ -13,9 +13,6 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class RoleService
 {
-    const DEFAULT_PAGE = 1;
-    const DEFAULT_PER_PAGE = 10;
-
     public function listQuery()
     {
         return QueryBuilder::for(Role::class)
@@ -31,14 +28,11 @@ class RoleService
                 AllowedSort::field('deleted_at'),
                 AllowedSort::field('updated_at'),
             ])
-            ->defaultSort('name')
-            ->select('roles.*');
+            ->defaultSort('name');
     }
 
     public function list(
-        bool $isSuperAdmin = false,
-        int $page = self::DEFAULT_PAGE,
-        int $perPage = self::DEFAULT_PER_PAGE,
+        bool $isSuperAdmin = false
     ) {
         $roles = $this
             ->listQuery()
@@ -48,14 +42,9 @@ class RoleService
                     $query->where('name', '!=', RoleEnum::SuperAdmin->value);
                 }
             )
-            ->paginate(
-                perPage: $perPage,
-                page: $page
-            );
+            ->get();
 
-        return RoleResource::collection($roles)
-            ->response()
-            ->getData(true);
+        return RoleResource::collection($roles);
     }
 
     public function showOrFail(string $roleId)
