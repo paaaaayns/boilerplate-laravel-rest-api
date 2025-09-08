@@ -10,6 +10,7 @@ use App\Filters\RoleFilter;
 use App\Filters\DateRangeFilter;
 use App\Filters\FullnameFilter;
 use App\Filters\PermissionFilter;
+use App\Http\Resources\UserInfiniteResource;
 use App\Http\Resources\UserResource;
 use App\Imports\UsersFirstSheetImport;
 use App\Imports\UsersImport;
@@ -101,6 +102,58 @@ class UserService
             'message' => 'Users fetched successfully.',
             'data' => $users
         ]);
+    }
+
+    public function infiniteList(
+        int $page = self::DEFAULT_PAGE,
+        int $perPage = self::DEFAULT_PER_PAGE,
+    ) {
+        $users = QueryBuilder::for(User::class)
+            ->allowedFilters([
+                AllowedFilter::partial('id'),
+                AllowedFilter::custom('full_name', new FullnameFilter()),
+
+                AllowedFilter::custom('role', new RoleFilter()),
+                AllowedFilter::custom('permission', new PermissionFilter()),
+                AllowedFilter::trashed()
+            ])
+            ->defaultSort('first_name')
+            ->allowedSorts([
+                AllowedSort::field('first_name',  'profiles.first_name'),
+                AllowedSort::field('middle_name',  'profiles.middle_name'),
+                AllowedSort::field('last_name',  'profiles.last_name'),
+            ])
+            ->selectRaw("
+                users.id as id,
+                CONCAT(profiles.first_name, ' ', profiles.last_name) as full_name
+            ")
+            ->leftJoin('profiles', 'profiles.user_id', '=', 'users.id')
+            ->paginate(
+                perPage: $perPage,
+                page: $page
+            );
+
+        return UserInfiniteResource::collection($users)
+            ->response()
+            ->getData(true);
+    }
+
+    public function listOptions()
+    {
+        return QueryBuilder::for(User::class)
+            ->allowedFilters([
+                AllowedFilter::custom('role', new RoleFilter()),
+                AllowedFilter::custom('permission', new PermissionFilter()),
+                AllowedFilter::callback('search', function ($query, $value) {
+                    $query->whereRaw("CONCAT(profiles.first_name, ' ', profiles.last_name) LIKE ?", ["%{$value}%"])
+                        ->orWhere('users.id', $value);
+                }),
+            ])
+            ->defaultSort('first_name')
+            ->selectRaw("users.id as id, CONCAT(profiles.first_name, ' ', profiles.last_name) as full_name")
+            ->leftJoin('profiles', 'profiles.user_id', '=', 'users.id')
+            ->limit(100)
+            ->get();
     }
 
     public function show(
