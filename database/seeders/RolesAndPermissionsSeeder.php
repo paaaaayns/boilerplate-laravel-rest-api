@@ -53,6 +53,8 @@ class RolesAndPermissionsSeeder extends Seeder
                 UserPermissionEnum::Import->value,
                 UserPermissionEnum::Export->value,
 
+                RolePermissionEnum::ViewMany->value,
+                RolePermissionEnum::ViewOne->value,
                 RolePermissionEnum::ViewAny->value,
                 RolePermissionEnum::ViewOwn->value,
                 RolePermissionEnum::ViewProtectedData->value,
@@ -60,6 +62,8 @@ class RolesAndPermissionsSeeder extends Seeder
                 RolePermissionEnum::Update->value,
                 RolePermissionEnum::HardDelete->value,
 
+                PermissionPermissionEnum::ViewMany->value,
+                PermissionPermissionEnum::ViewOne->value,
                 PermissionPermissionEnum::ViewAny->value,
                 PermissionPermissionEnum::ViewOwn->value,
                 PermissionPermissionEnum::ViewProtectedData->value,
@@ -76,6 +80,21 @@ class RolesAndPermissionsSeeder extends Seeder
                 UserPermissionEnum::Create->value,
                 UserPermissionEnum::Update->value,
                 UserPermissionEnum::SoftDelete->value,
+
+                RolePermissionEnum::ViewMany->value,
+                RolePermissionEnum::ViewOne->value,
+                RolePermissionEnum::ViewAny->value,
+                RolePermissionEnum::ViewOwn->value,
+                RolePermissionEnum::ViewProtectedData->value,
+                RolePermissionEnum::Create->value,
+                RolePermissionEnum::Update->value,
+                RolePermissionEnum::HardDelete->value,
+
+                PermissionPermissionEnum::ViewMany->value,
+                PermissionPermissionEnum::ViewOne->value,
+                PermissionPermissionEnum::ViewAny->value,
+                PermissionPermissionEnum::ViewOwn->value,
+                PermissionPermissionEnum::ViewProtectedData->value,
             ]);
 
         Role::create(['name' => RoleEnum::Employee->value])
