@@ -49,10 +49,6 @@ class UsersFirstSheetImport implements
 
         $data = $row->toArray();
 
-        Log::info("Processing row {$rowIndex}", [
-            'email' => $data['email'],
-        ]);
-
         try {
             $existingUser = User::withTrashed()->where('email', $data['email'])->first();
 
