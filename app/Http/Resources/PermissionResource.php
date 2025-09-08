@@ -11,12 +11,7 @@ class PermissionResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $authenticatedUser = User::find($request->user()->id);
-
-        $canViewProtectedData = $authenticatedUser->hasAnyPermission([
-            PermissionPermissionEnum::ViewProtectedData->value,
-            PermissionPermissionEnum::ViewOwn->value,
-        ]);
+        $canViewProtectedData = $request->user()?->can(PermissionPermissionEnum::ViewProtectedData->value) ?? false;
 
         return [
             'id' => $this->id,
