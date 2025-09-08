@@ -39,8 +39,11 @@ class RolesAndPermissionsSeeder extends Seeder
 
         Role::create(['name' =>  RoleEnum::SuperAdmin->value])
             ->givePermissionTo([
+                UserPermissionEnum::ViewMany->value,
+                UserPermissionEnum::ViewOne->value,
                 UserPermissionEnum::ViewAny->value,
                 UserPermissionEnum::ViewOwn->value,
+                UserPermissionEnum::ViewOptions->value,
                 UserPermissionEnum::ViewProtectedData->value,
                 UserPermissionEnum::Create->value,
                 UserPermissionEnum::Update->value,
@@ -64,8 +67,11 @@ class RolesAndPermissionsSeeder extends Seeder
 
         Role::create(['name' => RoleEnum::Admin->value])
             ->givePermissionTo([
+                UserPermissionEnum::ViewMany->value,
+                UserPermissionEnum::ViewOne->value,
                 UserPermissionEnum::ViewAny->value,
                 UserPermissionEnum::ViewOwn->value,
+                UserPermissionEnum::ViewOptions->value,
                 UserPermissionEnum::ViewProtectedData->value,
                 UserPermissionEnum::Create->value,
                 UserPermissionEnum::Update->value,
